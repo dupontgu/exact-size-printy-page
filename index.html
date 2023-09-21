@@ -8,7 +8,21 @@
     <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
     <title>Print Image Exact Size</title>
     <script>
-        const { jsPDF } = window.jspdf;
+        const {jsPDF} = window.jspdf;
+
+        function getSelectedFormat() {
+            var radios = document.getElementsByName('pageformat');
+            var selection = undefined;
+            for (i = 0; i < radios.length; i++) {
+                if (radios[i].checked) {
+                    selection = radios[i].value;
+                }
+            }
+            if (selection && selection == 'custom') {
+                return [document.getElementById("width_paper").value, document.getElementById("height_paper").value];
+            }
+            return selection;
+        }
 
         function getSelectedUnit() {
             var radios = document.getElementsByName('units');
@@ -39,11 +53,21 @@
             } else if (!width) {
                 width = height * aspectRatio
             }
+            let format = getSelectedFormat();
             let margin = unit == 'in' ? 0.5 : 12
             let orientation = (width / height > 1) ? "l" : "p"
-            let doc = new jsPDF({ "format": "letter", "unit": unit, "orientation": orientation })
+            let doc = new jsPDF({"format": format, "unit": unit, "orientation": orientation})
             doc.addImage(imageData, margin, margin, width, height);
             doc.save("out.pdf");
+        }
+
+        function onUnitSelected(param) {
+            if (param.checked) {
+                var elements = document.getElementsByClassName("dimension");
+                for (var i = 0; i < elements.length; i++) {
+                    elements[i].innerHTML = param.value;
+                }
+            }
         }
 
         function onFileSelected(param) {
@@ -86,15 +110,31 @@
     <br>
     <h2>OK, here you go!</h2>
     <div>
-        <input type="radio" id="in" name="units" value="in" checked />
+        <h3> Unit </h3>
+        <input type="radio" id="in" name="units" value="in" onchange="onUnitSelected(this)" checked />
         <label for="in">Inches</label>
-        <input type="radio" id="mm" name="units" value="mm" />
+        <input type="radio" id="mm" name="units" value="mm" onchange="onUnitSelected(this)" />
         <label for="mm">Millimeters</label>
     </div>
     <br>
     <div>
-        <input id="width_input" type="number" placeholder="width" />
-        <input id="height_input" type="number" placeholder="height" />
+        <h3> Paper Format </h3>
+        <input type="radio" id="letter" name="pageformat" value="letter" checked />
+        <label for="in">Letter (8.5" × 11.0")</label>
+        <input type="radio" id="a4" name="pageformat" value="a4" />
+        <label for="mm">DIN A4 (210 mm × 297 mm)</label>
+        <input type="radio" id="a4" name="pageformat" value="custom" />
+        <label for="mm">Custom Size</label>
+        <input id="width_paper" type="number" placeholder="width" class="custompaper" />&nbsp;<span
+            class="dimension">in</span>
+        &nbsp;×&nbsp;
+        <input id="height_paper" type="number" placeholder="height" class="custompaper" />&nbsp;<span
+            class="dimension">in</span>
+    </div>
+    <div>
+        <h3> Image Size </h3>
+        <input id="width_input" type="number" placeholder="width" />&nbsp;<span class="dimension">in</span>
+        <input id="height_input" type="number" placeholder="height" />&nbsp;<span class="dimension">in</span>
     </div>
     <br>
     <label for="ip">Select Image:</label>
