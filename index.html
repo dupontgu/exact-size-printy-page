@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+    <title>Print Image Exact Size</title>
+    <script>
+        const { jsPDF } = window.jspdf;
+
+        function getSelectedUnit() {
+            var radios = document.getElementsByName('units');
+            for (i = 0; i < radios.length; i++) {
+                if (radios[i].checked) return radios[i].value
+            }
+            return undefined
+        }
+
+        function getDimensionFromInput(id) {
+            let d = document.getElementById(id).value
+            return d == '' ? 0 : Number(d)
+        }
+
+        async function onImageLoaded(imageData) {
+            let img = new Image();
+            img.src = imageData;
+            await img.decode();
+            let aspectRatio = img.naturalWidth / img.naturalHeight;
+            let unit = getSelectedUnit()
+            var width = getDimensionFromInput("width_input")
+            var height = getDimensionFromInput("height_input")
+            if (!width && !height) {
+                alert("You need to specify width or height (or both)!")
+                return
+            } else if (!height) {
+                height = width / aspectRatio
+            } else if (!width) {
+                width = height * aspectRatio
+            }
+            let margin = unit == 'in' ? 0.5 : 12
+            let orientation = (width / height > 1) ? "l" : "p"
+            let doc = new jsPDF({ "format": "letter", "unit": unit, "orientation": orientation })
+            doc.addImage(imageData, margin, margin, width, height);
+            doc.save("out.pdf");
+        }
+
+        function onFileSelected(param) {
+            var reader = new FileReader();
+            reader.onload = (e) => onImageLoaded(e.target.result)
+            reader.readAsDataURL(param.files[0]);
+        }
+
+    </script>
+</head>
+
+<body>
+    <h1>Exact Size Printy Page</h1>
+    <h3>
+        You are here because you need to print an image that is an exact size on <i>paper.</i>
+    </h3>
+    <div style="max-width: 800px;">
+        <b>Usage:</b>
+        <ol>
+            <li>Select your measurement unit (inches vs. millimeters)</li>
+            <li>Enter your desired size on paper. If you leave either width or height blank, your original aspect ratio
+                will be preserved.</li>
+            <li>Use the button next to "Select Image" to choose an image from your computer. As soon as you choose one,
+                it will be processed.</li>
+            <li>You will be presented with a download dialog to save your new file. It will be a PDF with your image
+                embedded within it.</li>
+        </ol>
+    </div>
+    <div style="max-width: 800px;">
+        <b>Notes:</b>
+        <ul>
+            <li>Currently, only JPEG and PNG images are supported.</li>
+            <li>The PDF is generated assuming you will be printing on a single sheet of 8.5" * 11" paper.</li>
+            <li>If your image is wider than it is tall, the PDF generated will have a single <i>landscape</i> page. Be
+                sure you tell your printer to print in landscape mode.</li>
+            <li>Your operating system may try to scale the PDF before printing. If there's an option, make sure "scale"
+                is set to 100%</li>
+        </ul>
+    </div>
+    <br>
+    <h2>OK, here you go!</h2>
+    <div>
+        <input type="radio" id="in" name="units" value="in" checked />
+        <label for="in">Inches</label>
+        <input type="radio" id="mm" name="units" value="mm" />
+        <label for="mm">Millimeters</label>
+    </div>
+    <br>
+    <div>
+        <input id="width_input" type="number" placeholder="width" />
+        <input id="height_input" type="number" placeholder="height" />
+    </div>
+    <br>
+    <label for="ip">Select Image:</label>
+    <input id="ip" type="file" onchange="onFileSelected(this)" accept=".jpg, .jpeg, .png" />
+    <h2>----------------------------</h2>
+    <br><br>
+    <div>
+        <a href="https://github.com/dupontgu/exact-size-printy-page">Source Code</a>
+        <br>
+        <a href="mailto:dupontgu@gmail.com">Report Issues / Say Hi!</a>
+    </div>
+</body>
+
+</html>
